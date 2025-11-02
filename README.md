@@ -40,19 +40,44 @@ Cada projeto é um **produto completo** com:
 
 - **Tecnologias:** Java 21, Spring Boot 3.2+, PostgreSQL, JWT, Docker
 - **Conceitos:** DTOs, Thin Controllers, Spring Security, JWT Authentication
-- **Link:** [user-profile-service/](./user-profile-service/)
+- **Repositório:** [github.com/adelmonsouza/user-profile-service](https://github.com/adelmonsouza/user-profile-service)
+- **Link Local:** [user-profile-service/](./user-profile-service/)
 - **Artigo:** [DTOs Under the Hood](https://enouveau.io/blog/2025/11/01/dtos-under-the-hood.html)
 
 ---
 
-## 🗓️ Próximos Projetos (Em Desenvolvimento)
+### ✅ Dia 2-3: Content-Catalog-API
+**Conceito:** API de Catálogo de Conteúdo (Inspirado em Netflix/Spotify)
 
-| Dia | Projeto | Conceito BigTech | Status |
-|-----|---------|------------------|--------|
-| 1 | User-Profile-Service | Facebook/X | ✅ Completo |
-| 2-30 | Em planejamento | - | 🚧 Aguardando |
+- **Tecnologias:** Java 21, Spring Boot 3.2+, PostgreSQL, Spring Data JPA, Paginação
+- **Conceitos:** Paginação Eficiente, Performance, Spring Data JPA, Índices de Banco
+- **Repositório:** [github.com/adelmonsouza/content-catalog-api](https://github.com/adelmonsouza/content-catalog-api)
+- **Link Local:** [content-catalog-api/](./content-catalog-api/)
+- **Artigo:** [Paginação Eficiente no Spring Boot](https://enouveau.io/blog/2025/11/02/pagination-under-the-hood.html)
 
-Veja o plano completo em: [PROJETOS_30DIAS.md](./PROJETOS_30DIAS.md)
+---
+
+### ✅ Dia 4-5: Recommendation-Engine
+**Conceito:** Sistema de Recomendações (Inspirado em Amazon/Netflix)
+
+- **Tecnologias:** Java 21, Spring Boot 3.2+, PostgreSQL, Algoritmos
+- **Conceitos:** Collaborative Filtering, Jaccard Similarity, Estruturas de Dados (HashMap, Set)
+- **Repositório:** [github.com/adelmonsouza/recommendation-engine](https://github.com/adelmonsouza/recommendation-engine) 🔒 *Private (liberar 03/11)*
+- **Link Local:** [recommendation-engine/](./recommendation-engine/)
+- **Artigo:** Em breve
+
+---
+
+## 🗓️ Status dos Projetos
+
+| Dia | Projeto | Conceito BigTech | Status | Repositório |
+|-----|---------|------------------|--------|-------------|
+| 1 | User-Profile-Service | Facebook/X | ✅ Completo | [user-profile-service](https://github.com/adelmonsouza/user-profile-service) |
+| 2-3 | Content-Catalog-API | Netflix/Spotify | ✅ Completo | [content-catalog-api](https://github.com/adelmonsouza/content-catalog-api) |
+| 4-5 | Recommendation-Engine | Amazon/Netflix | ✅ Completo 🔒 | [recommendation-engine](https://github.com/adelmonsouza/recommendation-engine) |
+| 6-30 | Em planejamento | - | 🚧 Aguardando | - |
+
+**Veja o plano completo em:** [PROJETOS_30DIAS.md](./PROJETOS_30DIAS.md)
 
 ---
 
@@ -84,7 +109,21 @@ Veja o plano completo em: [PROJETOS_30DIAS.md](./PROJETOS_30DIAS.md)
 
 ```
 30DiasJava/
-├── user-profile-service/      # Projeto Dia 1
+├── user-profile-service/      # Projeto Dia 1 ✅
+│   ├── src/                   # Código fonte
+│   ├── Business_Plan.md       # Plano de negócios
+│   ├── README.md              # Documentação do projeto
+│   ├── Dockerfile             # Containerização
+│   └── compose.yaml           # Docker Compose
+│
+├── content-catalog-api/       # Projeto Dia 2-3 ✅
+│   ├── src/                   # Código fonte
+│   ├── Business_Plan.md       # Plano de negócios
+│   ├── README.md              # Documentação do projeto
+│   ├── Dockerfile             # Containerização
+│   └── compose.yaml           # Docker Compose
+│
+├── recommendation-engine/     # Projeto Dia 4-5 ✅
 │   ├── src/                   # Código fonte
 │   ├── Business_Plan.md       # Plano de negócios
 │   ├── README.md              # Documentação do projeto
@@ -161,6 +200,11 @@ docker-compose up -d
 - 📝 [Templates de Documentação](./TEMPLATES/)
 - 💼 [Business Plans dos Projetos](./user-profile-service/Business_Plan.md)
 
+### Repositórios Individuais
+- 🚀 [User-Profile-Service](https://github.com/adelmonsouza/user-profile-service)
+- 🚀 [Content-Catalog-API](https://github.com/adelmonsouza/content-catalog-api)
+- 🚀 [Recommendation-Engine](https://github.com/adelmonsouza/recommendation-engine) 🔒
+
 ---
 
 ## 🎓 O Que Você Vai Aprender
@@ -214,9 +258,10 @@ Sugestões e feedback são bem-vindos! Abra uma issue ou entre em contato.
 
 ## 📈 Estatísticas do Desafio
 
-![Progresso](https://img.shields.io/badge/Progresso-1%2F30%20Projetos-blue)
+![Progresso](https://img.shields.io/badge/Progresso-3%2F30%20Projetos-blue)
 ![Cobertura de Testes](https://img.shields.io/badge/Cobertura%20de%20Testes-%3E80%25-success)
 ![Build Status](https://img.shields.io/badge/Build-Passing-success)
+![Status](https://img.shields.io/badge/Status-10%25%20Completo-success)
 
 ---
 
