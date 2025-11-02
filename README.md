@@ -51,7 +51,7 @@ Cada projeto é um **produto completo** com:
 
 - **Tecnologias:** Java 21, Spring Boot 3.2+, PostgreSQL, Spring Data JPA, Paginação
 - **Conceitos:** Paginação Eficiente, Performance, Spring Data JPA, Índices de Banco
-- **Repositório:** [github.com/adelmonsouza/content-catalog-api](https://github.com/adelmonsouza/content-catalog-api)
+- **Repositório:** [github.com/adelmonsouza/30DiasJava-Day02-ContentCatalog](https://github.com/adelmonsouza/30DiasJava-Day02-ContentCatalog)
 - **Link Local:** [content-catalog-api/](./content-catalog-api/)
 - **Artigo:** [Paginação Eficiente no Spring Boot](https://enouveau.io/blog/2025/11/02/pagination-under-the-hood.html)
 
@@ -62,7 +62,7 @@ Cada projeto é um **produto completo** com:
 
 - **Tecnologias:** Java 21, Spring Boot 3.2+, PostgreSQL, Algoritmos
 - **Conceitos:** Collaborative Filtering, Jaccard Similarity, Estruturas de Dados (HashMap, Set)
-- **Repositório:** [github.com/adelmonsouza/recommendation-engine](https://github.com/adelmonsouza/recommendation-engine) 🔒 *Private (liberar 03/11)*
+- **Repositório:** [github.com/adelmonsouza/30DiasJava-Day03-RecommendationEngine](https://github.com/adelmonsouza/30DiasJava-Day03-RecommendationEngine) 🔒 *Private (liberar 03/11)*
 - **Link Local:** [recommendation-engine/](./recommendation-engine/)
 - **Artigo:** Em breve
 
