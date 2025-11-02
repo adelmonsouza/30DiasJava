@@ -72,9 +72,9 @@ Cada projeto é um **produto completo** com:
 
 | Dia | Projeto | Conceito BigTech | Status | Repositório |
 |-----|---------|------------------|--------|-------------|
-| 1 | User-Profile-Service | Facebook/X | ✅ Completo | [user-profile-service](https://github.com/adelmonsouza/user-profile-service) |
-| 2-3 | Content-Catalog-API | Netflix/Spotify | ✅ Completo | [content-catalog-api](https://github.com/adelmonsouza/content-catalog-api) |
-| 4-5 | Recommendation-Engine | Amazon/Netflix | ✅ Completo 🔒 | [recommendation-engine](https://github.com/adelmonsouza/recommendation-engine) |
+| 1 | User-Profile-Service | Facebook/X | ✅ Completo | [30DiasJava-Day01](https://github.com/adelmonsouza/30DiasJava-Day01-UserProfileService) |
+| 2-3 | Content-Catalog-API | Netflix/Spotify | ✅ Completo | [30DiasJava-Day02](https://github.com/adelmonsouza/30DiasJava-Day02-ContentCatalog) |
+| 4-5 | Recommendation-Engine | Amazon/Netflix | ✅ Completo 🔒 | [30DiasJava-Day03](https://github.com/adelmonsouza/30DiasJava-Day03-RecommendationEngine) |
 | 6-30 | Em planejamento | - | 🚧 Aguardando | - |
 
 **Veja o plano completo em:** [PROJETOS_30DIAS.md](./PROJETOS_30DIAS.md)
@@ -201,9 +201,9 @@ docker-compose up -d
 - 💼 [Business Plans dos Projetos](./user-profile-service/Business_Plan.md)
 
 ### Repositórios Individuais
-- 🚀 [User-Profile-Service](https://github.com/adelmonsouza/user-profile-service)
-- 🚀 [Content-Catalog-API](https://github.com/adelmonsouza/content-catalog-api)
-- 🚀 [Recommendation-Engine](https://github.com/adelmonsouza/recommendation-engine) 🔒
+- 🚀 [Day 01 - User-Profile-Service](https://github.com/adelmonsouza/30DiasJava-Day01-UserProfileService)
+- 🚀 [Day 02 - Content-Catalog-API](https://github.com/adelmonsouza/30DiasJava-Day02-ContentCatalog)
+- 🚀 [Day 03 - Recommendation-Engine](https://github.com/adelmonsouza/30DiasJava-Day03-RecommendationEngine) 🔒
 
 ---
 
