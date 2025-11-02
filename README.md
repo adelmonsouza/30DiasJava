@@ -8,7 +8,7 @@
 ![Status](https://img.shields.io/badge/Status-Em%20Andamento-success)
 
 **Início:** 01/11/2025  
-**Autor:** [Adelmo Souza](https://github.com/adelmonsouza)
+**Autor:** [Adelmon Souza](https://github.com/adelmonsouza)
 
 ---
 
