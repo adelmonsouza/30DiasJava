@@ -3,6 +3,8 @@
 **Status:** ✅ Standardized (Based on Day 2 Model)  
 **Date:** November 2, 2025
 
+**📖 See also:** [CONTENT_ECOSYSTEM.md](./CONTENT_ECOSYSTEM.md) - How GitHub, Blog, and LinkedIn connect
+
 ---
 
 ## 🎯 Standardization Guidelines
@@ -141,27 +143,38 @@
 
 ## 🎯 Next Steps for Future Days
 
-### For Each New Day:
+### For Each New Day (Follow This Sequence):
 
-1. **Use Templates:**
-   - Copy `Blog_Post_Template.md` for blog article
-   - Copy `LinkedIn_Post_Template_English.md` for LinkedIn
-   - Copy `README_Template_EN.md` for README
-   - Copy `Business_Plan_Template_EN.md` for Business Plan
+1. **Build & Document (GitHub):**
+   - Use `README_Template_EN.md` for README
+   - Use `Business_Plan_Template_EN.md` for Business Plan
+   - Push to `30DiasJava-DayXX-ProjectName`
 
-2. **Follow Day 2 Model:**
-   - Same structure
-   - Same tone (conversational, technical)
-   - Same sections
-   - Same formatting
+2. **Write Deep-Dive (Blog):**
+   - Use `Blog_Post_Template.md` for blog article
+   - Include "Under the Hood" section
+   - Link to GitHub project
+   - Publish on enouveau.io
 
-3. **Quality Checklist:**
+3. **Create LinkedIn Post:**
+   - Use `LinkedIn_Post_Template_English.md`
+   - Include GitHub link
+   - Include blog link
+   - Share key insight
+   - Post at optimal time (9-11 AM or 3-5 PM)
+
+### Content Ecosystem Rule:
+- **LinkedIn** = Teaser + Engagement (links to GitHub + Blog)
+- **Blog** = Complete Explanation + Technical Details
+- **GitHub** = Code + Ready-to-Study Project
+
+### Quality Checklist:
    - ✅ All text in English
    - ✅ Technical accuracy
    - ✅ Code examples
    - ✅ Performance comparisons
    - ✅ Trade-offs table
-   - ✅ Links to GitHub and blog
+   - ✅ **Links to GitHub AND blog in LinkedIn post**
    - ✅ Proper hashtags
 
 ---
