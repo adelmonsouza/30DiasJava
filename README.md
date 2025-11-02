@@ -1,5 +1,12 @@
 # 🚀 #30DiasJava - Desafio de Aprendizado Contínuo
 
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2+-brightgreen?logo=spring&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+![Status](https://img.shields.io/badge/Status-Em%20Andamento-success)
+
 **Início:** 01/11/2025  
 **Autor:** [Adelmo Souza](https://github.com/adelmonsouza)
 
@@ -203,8 +210,30 @@ Sugestões e feedback são bem-vindos! Abra uma issue ou entre em contato.
 
 ---
 
+---
+
+## 📈 Estatísticas do Desafio
+
+![Progresso](https://img.shields.io/badge/Progresso-1%2F30%20Projetos-blue)
+![Cobertura de Testes](https://img.shields.io/badge/Cobertura%20de%20Testes-%3E80%25-success)
+![Build Status](https://img.shields.io/badge/Build-Passing-success)
+
+---
+
+## 🌟 Contribuições
+
+[![GitHub stars](https://img.shields.io/github/stars/adelmonsouza/30DiasJava?style=social)](https://github.com/adelmonsouza/30DiasJava/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/adelmonsouza/30DiasJava?style=social)](https://github.com/adelmonsouza/30DiasJava/network/members)
+[![GitHub watchers](https://img.shields.io/github/watchers/adelmonsouza/30DiasJava?style=social)](https://github.com/adelmonsouza/30DiasJava/watchers)
+
+---
+
 **#30DiasJava | #SpringBoot | #Microsserviços | #CleanCode | #JavaDeveloper**
 
 ---
 
 **🚀 Começando em 01/11/2025 - Acompanhe a jornada!**
+
+[![GitHub](https://img.shields.io/badge/GitHub-adelmonsouza-181717?logo=github)](https://github.com/adelmonsouza)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-adelmonsouza-0077B5?logo=linkedin)](https://www.linkedin.com/in/adelmonsouza/)
+[![Blog](https://img.shields.io/badge/Blog-The%20Java%20Place-black?logo=rss)](https://enouveau.io)
