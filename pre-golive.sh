@@ -4,12 +4,18 @@
 # Pre-GoLive Script for #30DiasJava Monorepo
 # 
 # Purpose: Validate all projects before going live
-# Usage: ./pre-golive.sh [project-name]
+# Usage: ./pre-golive.sh [project-name] [--no-cache]
 #   - If no project specified, runs checks for all projects
 #   - If project specified, runs checks only for that project
+#   - --no-cache: Disable cache and run all checks
 ################################################################################
 
-set -e  # Exit on error
+# Cache directory
+CACHE_DIR="./.pre-golive-cache"
+CACHE_TTL=3600  # 1 hour
+
+# Don't exit on error for non-critical checks
+set +e  # Allow continues execution
 set -o pipefail  # Exit on pipe failure
 
 # Colors for output
@@ -24,6 +30,121 @@ TOTAL_PROJECTS=0
 PASSED_PROJECTS=0
 FAILED_PROJECTS=0
 WARNINGS=0
+
+# Report generation
+REPORT_DIR="./pre-golive-reports"
+JSON_REPORT="$REPORT_DIR/report.json"
+HTML_REPORT="$REPORT_DIR/report.html"
+TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+
+# Check cache
+check_cache() {
+    local project_dir=$1
+    local cache_file="$CACHE_DIR/$(basename "$project_dir")_cache"
+    
+    if [ -f "$cache_file" ]; then
+        local cache_age=$(($(date +%s) - $(stat -f %B "$cache_file" 2>/dev/null || stat -c %Y "$cache_file" 2>/dev/null)))
+        if [ $cache_age -lt $CACHE_TTL ]; then
+            return 0  # Cache valid
+        fi
+    fi
+    return 1  # Cache invalid or missing
+}
+
+# Update cache
+update_cache() {
+    local project_dir=$1
+    mkdir -p "$CACHE_DIR"
+    touch "$CACHE_DIR/$(basename "$project_dir")_cache"
+}
+
+# Initialize JSON report
+init_json_report() {
+    mkdir -p "$REPORT_DIR"
+    {
+        echo "{"
+        echo "  \"timestamp\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\","
+        echo "  \"projects\": ["
+    } > "$JSON_REPORT" 2>/dev/null || {
+        echo "{" > "$JSON_REPORT"
+        echo "  \"timestamp\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> "$JSON_REPORT"
+        echo "  \"projects\": [" >> "$JSON_REPORT"
+    }
+}
+
+# Add project to JSON report
+add_project_to_json() {
+    local project_name=$1
+    local status=$2
+    local checks_passed=$3
+    local checks_failed=$4
+    local warnings=$5
+    
+    # Ensure report directory exists
+    mkdir -p "$REPORT_DIR"
+    
+    # Check if we need a comma (not first project)
+    if [ "$JSON_FIRST_PROJECT" = false ]; then
+        echo "," >> "$JSON_REPORT" 2>/dev/null || echo "," | tee -a "$JSON_REPORT" > /dev/null
+    fi
+    JSON_FIRST_PROJECT=false
+    
+    {
+        echo "    {"
+        echo "      \"name\": \"$project_name\","
+        echo "      \"status\": \"$status\","
+        echo "      \"checks_passed\": $checks_passed,"
+        echo "      \"checks_failed\": $checks_failed,"
+        echo "      \"warnings\": $warnings"
+        echo -n "    }"
+    } >> "$JSON_REPORT" 2>/dev/null || {
+        echo "    {" >> "$JSON_REPORT"
+        echo "      \"name\": \"$project_name\"," >> "$JSON_REPORT"
+        echo "      \"status\": \"$status\"," >> "$JSON_REPORT"
+        echo "      \"checks_passed\": $checks_passed," >> "$JSON_REPORT"
+        echo "      \"checks_failed\": $checks_failed," >> "$JSON_REPORT"
+        echo "      \"warnings\": $warnings" >> "$JSON_REPORT"
+        echo -n "    }" >> "$JSON_REPORT"
+    }
+}
+
+# Finalize JSON report
+finalize_json_report() {
+    {
+        echo ""
+        echo "  ],"
+        echo "  \"summary\": {"
+        echo "    \"total_projects\": $TOTAL_PROJECTS,"
+        echo "    \"passed\": $PASSED_PROJECTS,"
+        echo "    \"failed\": $FAILED_PROJECTS,"
+        echo "    \"warnings\": $WARNINGS"
+        echo "  }"
+        echo "}"
+    } >> "$JSON_REPORT" 2>/dev/null || {
+        echo "" >> "$JSON_REPORT"
+        echo "  ]," >> "$JSON_REPORT"
+        echo "  \"summary\": {" >> "$JSON_REPORT"
+        echo "    \"total_projects\": $TOTAL_PROJECTS," >> "$JSON_REPORT"
+        echo "    \"passed\": $PASSED_PROJECTS," >> "$JSON_REPORT"
+        echo "    \"failed\": $FAILED_PROJECTS," >> "$JSON_REPORT"
+        echo "    \"warnings\": $WARNINGS" >> "$JSON_REPORT"
+        echo "  }" >> "$JSON_REPORT"
+        echo "}" >> "$JSON_REPORT"
+    }
+}
+
+# Detect build tool (Maven or Gradle)
+detect_build_tool() {
+    local project_dir=$1
+    
+    if [ -f "$project_dir/pom.xml" ]; then
+        echo "maven"
+    elif [ -f "$project_dir/build.gradle" ] || [ -f "$project_dir/build.gradle.kts" ]; then
+        echo "gradle"
+    else
+        echo "unknown"
+    fi
+}
 
 ################################################################################
 # Functions
@@ -161,25 +282,75 @@ check_documentation() {
 
 check_build() {
     local project_dir=$1
-    print_info "Checking Maven build..."
+    local build_tool=$(detect_build_tool "$project_dir")
     
     cd "$project_dir"
     
-    if [ ! -f "pom.xml" ]; then
-        print_error "pom.xml not found"
-        cd - > /dev/null
-        return 1
-    fi
-    
-    # Clean and compile (skip tests for faster validation)
-    if mvn clean compile -DskipTests -q > /tmp/mvn_build.log 2>&1; then
-        print_success "Build successful"
-        cd - > /dev/null
-        rm -f /tmp/mvn_build.log
-        return 0
+    if [ "$build_tool" = "maven" ]; then
+        print_info "Checking Maven build..."
+        
+        if [ ! -f "pom.xml" ]; then
+            print_error "pom.xml not found"
+            cd - > /dev/null
+            return 1
+        fi
+        
+        # Check Java version
+        local java_version=$(java -version 2>&1 | head -1 | cut -d'"' -f2 | sed '/^1\./s///' | cut -d'.' -f1)
+        print_info "Java version: $java_version"
+        
+        # Check Spring Boot version
+        if grep -q "spring-boot-starter-parent" pom.xml; then
+            local spring_version=$(grep -A 1 "spring-boot-starter-parent" pom.xml | grep "<version>" | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | head -1)
+            print_info "Spring Boot version: $spring_version"
+        fi
+        
+        # Dependency tree (quick check)
+        print_info "Analyzing dependency tree..."
+        if mvn dependency:tree -q > /tmp/dependency_tree.log 2>&1; then
+            local dep_count=$(grep -c "org.springframework\|org.postgresql\|com." /tmp/dependency_tree.log 2>/dev/null || echo "0")
+            print_info "Dependencies analyzed: $dep_count"
+        fi
+        
+        # Clean and compile (skip tests for faster validation)
+        if mvn clean compile -DskipTests -q > /tmp/mvn_build.log 2>&1; then
+            print_success "Maven build successful"
+            cd - > /dev/null
+            rm -f /tmp/mvn_build.log /tmp/dependency_tree.log
+            return 0
+        else
+            print_error "Maven build failed. Check /tmp/mvn_build.log"
+            tail -20 /tmp/mvn_build.log
+            cd - > /dev/null
+            return 1
+        fi
+        
+    elif [ "$build_tool" = "gradle" ]; then
+        print_info "Checking Gradle build..."
+        
+        if [ -f "gradlew" ]; then
+            ./gradlew clean compileJava -x test --quiet > /tmp/gradle_build.log 2>&1
+        elif [ -f "gradle" ]; then
+            gradle clean compileJava -x test --quiet > /tmp/gradle_build.log 2>&1
+        else
+            print_error "Gradle wrapper not found"
+            cd - > /dev/null
+            return 1
+        fi
+        
+        if [ $? -eq 0 ]; then
+            print_success "Gradle build successful"
+            cd - > /dev/null
+            rm -f /tmp/gradle_build.log
+            return 0
+        else
+            print_error "Gradle build failed. Check /tmp/gradle_build.log"
+            tail -20 /tmp/gradle_build.log
+            cd - > /dev/null
+            return 1
+        fi
     else
-        print_error "Build failed. Check /tmp/mvn_build.log"
-        tail -20 /tmp/mvn_build.log
+        print_error "No build tool detected (pom.xml or build.gradle)"
         cd - > /dev/null
         return 1
     fi
@@ -187,49 +358,95 @@ check_build() {
 
 check_tests() {
     local project_dir=$1
+    local build_tool=$(detect_build_tool "$project_dir")
+    
     print_info "Running tests..."
     
     cd "$project_dir"
     
-    if ! mvn test -q > /tmp/mvn_test.log 2>&1; then
-        print_error "Tests failed"
-        tail -30 /tmp/mvn_test.log | grep -A 10 -E "(ERROR|FAILURE|FAILED)" || tail -30 /tmp/mvn_test.log
+    if [ "$build_tool" = "maven" ]; then
+        if ! mvn test -q > /tmp/mvn_test.log 2>&1; then
+            print_error "Tests failed"
+            tail -30 /tmp/mvn_test.log | grep -A 10 -E "(ERROR|FAILURE|FAILED)" || tail -30 /tmp/mvn_test.log
+            cd - > /dev/null
+            return 1
+        fi
+        
+        # Check test results
+        local test_results=$(grep -E "Tests run:|BUILD" /tmp/mvn_test.log | tail -1)
+        print_info "Test results: $test_results"
         cd - > /dev/null
-        return 1
+        rm -f /tmp/mvn_test.log
+        
+    elif [ "$build_tool" = "gradle" ]; then
+        local gradle_cmd=""
+        if [ -f "gradlew" ]; then
+            gradle_cmd="./gradlew test --quiet"
+        else
+            gradle_cmd="gradle test --quiet"
+        fi
+        
+        if ! $gradle_cmd > /tmp/gradle_test.log 2>&1; then
+            print_error "Tests failed"
+            tail -30 /tmp/gradle_test.log | grep -A 10 -E "(FAILED|FAILURE)" || tail -30 /tmp/gradle_test.log
+            cd - > /dev/null
+            return 1
+        fi
+        cd - > /dev/null
+        rm -f /tmp/gradle_test.log
     fi
     
-    # Check test results
-    local test_results=$(grep -E "Tests run:|BUILD" /tmp/mvn_test.log | tail -1)
-    print_info "Test results: $test_results"
-    
-    cd - > /dev/null
-    rm -f /tmp/mvn_test.log
     print_success "All tests passed"
     return 0
 }
 
 check_coverage() {
     local project_dir=$1
+    local build_tool=$(detect_build_tool "$project_dir")
+    
     print_info "Checking test coverage..."
     
     cd "$project_dir"
     
-    # Run tests with coverage
-    if mvn test jacoco:report -q > /tmp/mvn_coverage.log 2>&1; then
-        # Try to extract coverage percentage
-        if [ -f "target/site/jacoco/index.html" ]; then
-            print_success "Coverage report generated"
-            print_info "View report: $project_dir/target/site/jacoco/index.html"
+    if [ "$build_tool" = "maven" ]; then
+        # Run tests with coverage
+        if mvn test jacoco:report -q > /tmp/mvn_coverage.log 2>&1; then
+            # Try to extract coverage percentage
+            if [ -f "target/site/jacoco/index.html" ]; then
+                print_success "Coverage report generated"
+                print_info "View report: $project_dir/target/site/jacoco/index.html"
+            else
+                print_warning "Coverage report not found (JaCoCo might not be configured)"
+            fi
+            cd - > /dev/null
+            rm -f /tmp/mvn_coverage.log
+            return 0
         else
-            print_warning "Coverage report not found (JaCoCo might not be configured)"
+            print_warning "Coverage check failed (non-critical)"
+            cd - > /dev/null
+            return 0  # Non-critical, don't fail
         fi
-        cd - > /dev/null
-        rm -f /tmp/mvn_coverage.log
-        return 0
-    else
-        print_warning "Coverage check failed (non-critical)"
-        cd - > /dev/null
-        return 0  # Non-critical, don't fail
+    elif [ "$build_tool" = "gradle" ]; then
+        local gradle_cmd=""
+        if [ -f "gradlew" ]; then
+            gradle_cmd="./gradlew test jacocoTestReport --quiet"
+        else
+            gradle_cmd="gradle test jacocoTestReport --quiet"
+        fi
+        
+        if $gradle_cmd > /tmp/gradle_coverage.log 2>&1; then
+            if [ -f "build/reports/jacoco/test/html/index.html" ]; then
+                print_success "Coverage report generated"
+                print_info "View report: $project_dir/build/reports/jacoco/test/html/index.html"
+            fi
+            cd - > /dev/null
+            rm -f /tmp/gradle_coverage.log
+            return 0
+        else
+            print_warning "Coverage check failed (non-critical)"
+            cd - > /dev/null
+            return 0
+        fi
     fi
 }
 
@@ -239,44 +456,108 @@ check_coverage() {
 
 check_code_quality() {
     local project_dir=$1
+    local build_tool=$(detect_build_tool "$project_dir")
+    
     print_info "Running code quality checks..."
     
     cd "$project_dir"
     local quality_issues=0
     
-    # Checkstyle
-    if mvn checkstyle:check -q > /tmp/checkstyle.log 2>&1 2>/dev/null; then
-        print_success "Checkstyle: No issues found"
-    else
-        if grep -q "checkstyle" pom.xml 2>/dev/null; then
-            print_warning "Checkstyle found issues (check /tmp/checkstyle.log)"
-            quality_issues=1
+    if [ "$build_tool" = "maven" ]; then
+        # Checkstyle
+        if mvn checkstyle:check -q > /tmp/checkstyle.log 2>&1 2>/dev/null; then
+            print_success "Checkstyle: No issues found"
         else
-            print_info "Checkstyle not configured (optional)"
+            if grep -q "checkstyle" pom.xml 2>/dev/null; then
+                print_warning "Checkstyle found issues (check /tmp/checkstyle.log)"
+                quality_issues=1
+            else
+                print_info "Checkstyle not configured (optional)"
+            fi
         fi
-    fi
-    
-    # PMD
-    if mvn pmd:check -q > /tmp/pmd.log 2>&1 2>/dev/null; then
-        print_success "PMD: No issues found"
-    else
-        if grep -q "pmd" pom.xml 2>/dev/null; then
-            print_warning "PMD found issues (check /tmp/pmd.log)"
-            quality_issues=1
+        
+        # PMD
+        if mvn pmd:check -q > /tmp/pmd.log 2>&1 2>/dev/null; then
+            print_success "PMD: No issues found"
         else
-            print_info "PMD not configured (optional)"
+            if grep -q "pmd" pom.xml 2>/dev/null; then
+                print_warning "PMD found issues (check /tmp/pmd.log)"
+                quality_issues=1
+            else
+                print_info "PMD not configured (optional)"
+            fi
         fi
-    fi
-    
-    # SpotBugs
-    if mvn spotbugs:check -q > /tmp/spotbugs.log 2>&1 2>/dev/null; then
-        print_success "SpotBugs: No issues found"
-    else
-        if grep -q "spotbugs" pom.xml 2>/dev/null; then
-            print_warning "SpotBugs found issues (check /tmp/spotbugs.log)"
-            quality_issues=1
+        
+        # SpotBugs
+        if mvn spotbugs:check -q > /tmp/spotbugs.log 2>&1 2>/dev/null; then
+            print_success "SpotBugs: No issues found"
         else
-            print_info "SpotBugs not configured (optional)"
+            if grep -q "spotbugs" pom.xml 2>/dev/null; then
+                print_warning "SpotBugs found issues (check /tmp/spotbugs.log)"
+                quality_issues=1
+            else
+                print_info "SpotBugs not configured (optional)"
+            fi
+        fi
+        
+        # SonarQube (if configured)
+        if grep -q "sonar" pom.xml 2>/dev/null || [ -f "sonar-project.properties" ]; then
+            print_info "SonarQube configuration found"
+            if [ -n "$SONAR_TOKEN" ] && [ -n "$SONAR_HOST_URL" ]; then
+                if mvn sonar:sonar -Dsonar.token="$SONAR_TOKEN" -Dsonar.host.url="$SONAR_HOST_URL" -q > /tmp/sonar.log 2>&1 2>/dev/null; then
+                    print_success "SonarQube analysis completed"
+                else
+                    print_warning "SonarQube analysis failed (check /tmp/sonar.log)"
+                fi
+            else
+                print_info "SonarQube configured but SONAR_TOKEN/SONAR_HOST_URL not set (skip)"
+            fi
+        else
+            print_info "SonarQube not configured (optional)"
+        fi
+        
+    elif [ "$build_tool" = "gradle" ]; then
+        local gradle_cmd=""
+        if [ -f "gradlew" ]; then
+            gradle_cmd="./gradlew"
+        else
+            gradle_cmd="gradle"
+        fi
+        
+        # Checkstyle for Gradle
+        if $gradle_cmd checkstyleMain checkstyleTest --quiet > /tmp/checkstyle.log 2>&1 2>/dev/null; then
+            print_success "Checkstyle: No issues found"
+        else
+            if grep -q "checkstyle" build.gradle* 2>/dev/null; then
+                print_warning "Checkstyle found issues"
+                quality_issues=1
+            else
+                print_info "Checkstyle not configured (optional)"
+            fi
+        fi
+        
+        # PMD for Gradle
+        if $gradle_cmd pmdMain pmdTest --quiet > /tmp/pmd.log 2>&1 2>/dev/null; then
+            print_success "PMD: No issues found"
+        else
+            if grep -q "pmd" build.gradle* 2>/dev/null; then
+                print_warning "PMD found issues"
+                quality_issues=1
+            else
+                print_info "PMD not configured (optional)"
+            fi
+        fi
+        
+        # SpotBugs for Gradle
+        if $gradle_cmd spotbugsMain spotbugsTest --quiet > /tmp/spotbugs.log 2>&1 2>/dev/null; then
+            print_success "SpotBugs: No issues found"
+        else
+            if grep -q "spotbugs" build.gradle* 2>/dev/null; then
+                print_warning "SpotBugs found issues"
+                quality_issues=1
+            else
+                print_info "SpotBugs not configured (optional)"
+            fi
         fi
     fi
     
@@ -300,24 +581,50 @@ check_dependency_security() {
     
     cd "$project_dir"
     
-    # OWASP Dependency Check
-    if mvn org.owasp:dependency-check-maven:check -q > /tmp/dependency-check.log 2>&1 2>/dev/null; then
-        print_success "OWASP Dependency Check: No vulnerabilities found"
-        cd - > /dev/null
-        rm -f /tmp/dependency-check.log
-        return 0
-    else
-        # Check if plugin is configured
-        if grep -q "dependency-check-maven" pom.xml 2>/dev/null; then
-            print_warning "OWASP Dependency Check found vulnerabilities (check /tmp/dependency-check.log)"
-            if [ -f "target/dependency-check-report.html" ]; then
-                print_info "Report: $project_dir/target/dependency-check-report.html"
-            fi
+    local build_tool=$(detect_build_tool "$project_dir")
+    
+    if [ "$build_tool" = "maven" ]; then
+        # OWASP Dependency Check
+        if mvn org.owasp:dependency-check-maven:check -q > /tmp/dependency-check.log 2>&1 2>/dev/null; then
+            print_success "OWASP Dependency Check: No vulnerabilities found"
+            cd - > /dev/null
+            rm -f /tmp/dependency-check.log
+            return 0
         else
-            print_info "OWASP Dependency Check not configured (recommended to add)"
+            # Check if plugin is configured
+            if grep -q "dependency-check-maven" pom.xml 2>/dev/null; then
+                print_warning "OWASP Dependency Check found vulnerabilities (check /tmp/dependency-check.log)"
+                if [ -f "target/dependency-check-report.html" ]; then
+                    print_info "Report: $project_dir/target/dependency-check-report.html"
+                fi
+            else
+                print_info "OWASP Dependency Check not configured (recommended to add)"
+            fi
+            cd - > /dev/null
+            return 0  # Non-critical
         fi
-        cd - > /dev/null
-        return 0  # Non-critical
+    elif [ "$build_tool" = "gradle" ]; then
+        local gradle_cmd=""
+        if [ -f "gradlew" ]; then
+            gradle_cmd="./gradlew dependencyCheckAnalyze --quiet"
+        else
+            gradle_cmd="gradle dependencyCheckAnalyze --quiet"
+        fi
+        
+        if $gradle_cmd > /tmp/dependency-check.log 2>&1 2>/dev/null; then
+            print_success "OWASP Dependency Check: No vulnerabilities found"
+            cd - > /dev/null
+            rm -f /tmp/dependency-check.log
+            return 0
+        else
+            if grep -q "dependency-check" build.gradle* 2>/dev/null; then
+                print_warning "OWASP Dependency Check found vulnerabilities"
+            else
+                print_info "OWASP Dependency Check not configured (recommended)"
+            fi
+            cd - > /dev/null
+            return 0
+        fi
     fi
 }
 
@@ -332,7 +639,7 @@ check_database_migrations() {
     local migration_checks_passed=0
     
     # Check for Flyway
-    if grep -q "flyway" pom.xml 2>/dev/null || [ -d "$project_dir/src/main/resources/db/migration" ]; then
+    if grep -q "flyway" "$project_dir/pom.xml" 2>/dev/null || [ -d "$project_dir/src/main/resources/db/migration" ]; then
         print_success "Flyway configuration found"
         
         # Validate migrations
@@ -349,7 +656,7 @@ check_database_migrations() {
     fi
     
     # Check for Liquibase
-    if grep -q "liquibase" pom.xml 2>/dev/null || [ -f "$project_dir/src/main/resources/db/changelog/db.changelog-master.xml" ]; then
+    if grep -q "liquibase" "$project_dir/pom.xml" 2>/dev/null || [ -f "$project_dir/src/main/resources/db/changelog/db.changelog-master.xml" ]; then
         print_success "Liquibase configuration found"
         
         # Validate changelogs
@@ -434,7 +741,7 @@ check_performance() {
     local perf_checks_passed=0
     
     # Check for actuator endpoints
-    if grep -q "spring-boot-starter-actuator" "$project_dir/pom.xml" 2>/dev/null; then
+    if grep -q "spring-boot-starter-actuator" "$project_dir/pom.xml" 2>/dev/null || grep -q "spring-boot-starter-actuator" "$project_dir/build.gradle"* 2>/dev/null; then
         print_success "Spring Actuator found (enables monitoring)"
         perf_checks_passed=1
     fi
@@ -535,8 +842,15 @@ validate_project() {
     
     print_header "Validating: $project_name"
     
+    # Check cache (optional - can be disabled with --no-cache)
+    if [ "$NO_CACHE" != "true" ] && check_cache "$project_dir"; then
+        print_info "Using cached results (use --no-cache to force refresh)"
+        # Load from cache would go here - simplified for now
+    fi
+    
     local checks_passed=0
     local checks_failed=0
+    local project_warnings=0
     
     # 1. Security checks (critical)
     if check_secrets "$project_dir"; then
@@ -591,15 +905,22 @@ validate_project() {
     # 12. Performance check (optional)
     check_performance "$project_dir"
     
+    # Update cache
+    if [ "$NO_CACHE" != "true" ]; then
+        update_cache "$project_dir"
+    fi
+    
     # Summary
     echo ""
     if [ $checks_failed -eq 0 ]; then
         print_success "Project $project_name: All critical checks passed"
         ((PASSED_PROJECTS++))
+        add_project_to_json "$project_name" "PASSED" $checks_passed $checks_failed $project_warnings
         return 0
     else
         print_error "Project $project_name: $checks_failed critical check(s) failed"
         ((FAILED_PROJECTS++))
+        add_project_to_json "$project_name" "FAILED" $checks_passed $checks_failed $project_warnings
         return 1
     fi
 }
@@ -613,20 +934,126 @@ find_projects() {
     
     if [ -n "$1" ]; then
         # Specific project requested
-        if [ -d "$1" ] && [ -f "$1/pom.xml" ]; then
+        if [ -d "$1" ] && ([ -f "$1/pom.xml" ] || [ -f "$1/build.gradle" ] || [ -f "$1/build.gradle.kts" ]); then
             projects=("$1")
         else
-            print_error "Project '$1' not found or doesn't have pom.xml"
-            exit 1
-        fi
+            print_error "Project '$1' not found or doesn't have pom.xml or build.gradle"
+  exit 1
+fi
     else
-        # Find all projects with pom.xml
+        # Find all projects with pom.xml or build.gradle
         while IFS= read -r -d '' project; do
             projects+=("$(dirname "$project")")
-        done < <(find . -maxdepth 2 -name "pom.xml" -type f -print0)
+        done < <(find . -maxdepth 2 \( -name "pom.xml" -o -name "build.gradle" -o -name "build.gradle.kts" \) -type f -print0)
+        
+        # Remove duplicates
+        readarray -t unique_projects < <(printf '%s\n' "${projects[@]}" | sort -u)
+        projects=("${unique_projects[@]}")
     fi
     
     echo "${projects[@]}"
+}
+
+################################################################################
+# Report Generation
+################################################################################
+
+generate_html_report() {
+    print_info "Generating HTML report..."
+    
+    cat > "$HTML_REPORT" << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-GoLive Validation Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        .summary { display: flex; gap: 20px; margin: 20px 0; }
+        .stat { padding: 15px; border-radius: 5px; text-align: center; flex: 1; }
+        .stat.passed { background: #d4edda; color: #155724; }
+        .stat.failed { background: #f8d7da; color: #721c24; }
+        .stat.warnings { background: #fff3cd; color: #856404; }
+        .project { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .project.passed { border-left: 4px solid #28a745; }
+        .project.failed { border-left: 4px solid #dc3545; }
+        .status { font-weight: bold; font-size: 18px; margin-bottom: 10px; }
+        .status.passed { color: #28a745; }
+        .status.failed { color: #dc3545; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; }
+        .timestamp { color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Pre-GoLive Validation Report</h1>
+        <div class="timestamp">Generated: <span id="timestamp"></span></div>
+        
+        <div class="summary">
+            <div class="stat">
+                <h2 id="total-projects">0</h2>
+                <p>Total Projects</p>
+            </div>
+            <div class="stat passed">
+                <h2 id="passed-projects">0</h2>
+                <p>Passed</p>
+            </div>
+            <div class="stat failed">
+                <h2 id="failed-projects">0</h2>
+                <p>Failed</p>
+            </div>
+            <div class="stat warnings">
+                <h2 id="total-warnings">0</h2>
+                <p>Warnings</p>
+            </div>
+        </div>
+        
+        <div id="projects-container"></div>
+    </div>
+    
+    <script>
+        // Load JSON report
+        fetch('report.json')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('timestamp').textContent = new Date(data.timestamp).toLocaleString();
+                document.getElementById('total-projects').textContent = data.summary.total_projects;
+                document.getElementById('passed-projects').textContent = data.summary.passed;
+                document.getElementById('failed-projects').textContent = data.summary.failed;
+                document.getElementById('total-warnings').textContent = data.summary.warnings;
+                
+                const container = document.getElementById('projects-container');
+                data.projects.forEach(project => {
+                    const div = document.createElement('div');
+                    div.className = `project ${project.status.toLowerCase()}`;
+                    div.innerHTML = `
+                        <div class="status ${project.status.toLowerCase()}">${project.status === 'PASSED' ? '✅' : '❌'} ${project.name}</div>
+                        <table>
+                            <tr><th>Metric</th><th>Value</th></tr>
+                            <tr><td>Checks Passed</td><td>${project.checks_passed}</td></tr>
+                            <tr><td>Checks Failed</td><td>${project.checks_failed}</td></tr>
+                            <tr><td>Warnings</td><td>${project.warnings}</td></tr>
+                        </table>
+                    `;
+                    container.appendChild(div);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading report:', error);
+                document.getElementById('projects-container').innerHTML = '<p>Error loading report data.</p>';
+            });
+    </script>
+</body>
+</html>
+EOF
+    
+    print_success "HTML report generated: $HTML_REPORT"
+    print_info "JSON report: $JSON_REPORT"
 }
 
 ################################################################################
@@ -634,17 +1061,49 @@ find_projects() {
 ################################################################################
 
 main() {
+    # Parse arguments
+    NO_CACHE=false
+    for arg in "$@"; do
+        case $arg in
+            --no-cache)
+                NO_CACHE=true
+                shift
+                ;;
+            *)
+                # Project name or other args
+                ;;
+        esac
+    done
+    
     print_header "🚀 Pre-GoLive Checks for #30DiasJava"
     echo ""
     echo "This script validates all projects before going live."
+    if [ "$NO_CACHE" = "true" ]; then
+        echo "Cache disabled - running all checks."
+    fi
     echo ""
     
-    # Find projects
-    read -a projects <<< "$(find_projects "$1")"
+    # Initialize cache directory
+    mkdir -p "$CACHE_DIR"
+    
+    # Initialize JSON report
+    JSON_FIRST_PROJECT=true
+    init_json_report
+    
+    # Find projects (get project name if provided, excluding --no-cache)
+    local project_arg=""
+    for arg in "$@"; do
+        if [ "$arg" != "--no-cache" ]; then
+            project_arg="$arg"
+            break
+        fi
+    done
+    
+    read -a projects <<< "$(find_projects "$project_arg")"
     TOTAL_PROJECTS=${#projects[@]}
     
     if [ $TOTAL_PROJECTS -eq 0 ]; then
-        print_error "No projects found with pom.xml"
+        print_error "No projects found with pom.xml or build.gradle"
         exit 1
     fi
     
@@ -655,6 +1114,12 @@ main() {
     for project in "${projects[@]}"; do
         validate_project "$project" || true
     done
+    
+    # Finalize JSON report
+    finalize_json_report
+    
+    # Generate HTML report
+    generate_html_report
     
     # Final summary
     echo ""
@@ -673,10 +1138,18 @@ main() {
     if [ $FAILED_PROJECTS -eq 0 ]; then
         print_success "✅ All projects passed critical checks!"
         print_info "Ready for production deployment"
+        print_info ""
+        print_info "📊 Reports generated:"
+        print_info "   JSON: $JSON_REPORT"
+        print_info "   HTML: $HTML_REPORT"
         exit 0
     else
         print_error "❌ Some projects failed critical checks"
         print_info "Fix the issues above before going live"
+        print_info ""
+        print_info "📊 Reports generated:"
+        print_info "   JSON: $JSON_REPORT"
+        print_info "   HTML: $HTML_REPORT"
         exit 1
     fi
 }

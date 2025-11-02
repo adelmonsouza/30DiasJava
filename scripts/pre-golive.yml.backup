@@ -1,0 +1,43 @@
+name: Pre-GoLive Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'Specific project to validate (leave empty for all)'
+        required: false
+        type: string
+
+jobs:
+  validate:
+    name: Pre-GoLive Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Run Pre-GoLive Script
+        run: |
+          chmod +x pre-golive.sh
+          ./pre-golive.sh "${{ github.event.inputs.project }}"
+      
+      - name: Upload test coverage reports
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          files: |
+            */target/site/jacoco/jacoco.xml
+          fail_ci_if_error: false
+
