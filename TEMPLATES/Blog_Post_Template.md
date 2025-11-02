@@ -319,4 +319,15 @@ The decision to use [pattern] isn't just about following best practices – it's
 
 ---
 
+## 🔗 Content Ecosystem
+
+**This article is part of the #30DiasJava challenge:**
+- **GitHub:** [Link to repository] - Complete code, README, Business Plan
+- **Blog:** This article - Technical deep-dive and "Under the Hood" analysis
+- **LinkedIn:** [Link to LinkedIn post] - Engagement and insights
+
+Each platform complements the others. Study the code on GitHub, understand the concepts in this blog post, and engage with the community on LinkedIn!
+
+---
+
 **#30DiasJava | #SpringBoot | #[Category1] | #[Category2] | #[Category3]**

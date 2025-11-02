@@ -169,12 +169,26 @@
 - **GitHub** = Code + Ready-to-Study Project
 
 ### Quality Checklist:
+
+1. **Use Templates:**
+   - Copy `Blog_Post_Template.md` for blog article
+   - Copy `LinkedIn_Post_Template_English.md` for LinkedIn
+   - Copy `README_Template_EN.md` for README
+   - Copy `Business_Plan_Template_EN.md` for Business Plan
+
+2. **Follow Day 2 Model:**
+   - Same structure
+   - Same tone (conversational, technical)
+   - Same sections
+   - Same formatting
+
+3. **Quality Checklist:**
    - ✅ All text in English
    - ✅ Technical accuracy
    - ✅ Code examples
    - ✅ Performance comparisons
    - ✅ Trade-offs table
-   - ✅ **Links to GitHub AND blog in LinkedIn post**
+   - ✅ Links to GitHub and blog
    - ✅ Proper hashtags
 
 ---

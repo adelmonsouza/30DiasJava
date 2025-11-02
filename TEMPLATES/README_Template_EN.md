@@ -186,7 +186,18 @@ src/
 
 This project is part of the **#30DiasJava** challenge.
 
-**Related Deep-Dive Article:** [Link to article on The Java Place]
+**Related Deep-Dive Article:** [Link to article on The Java Place - format: enouveau.io/blog/YYYY/MM/DD/article-slug.html]
+
+---
+
+## 🔗 Content Ecosystem
+
+**This project is part of a complete learning ecosystem:**
+- **GitHub (this repo):** Complete code, README, Business Plan - ready to study and clone
+- **Blog:** [Link to article] - Technical deep-dive and "Under the Hood" analysis
+- **LinkedIn:** [Link to LinkedIn post] - Day announcement, insights, and community engagement
+
+Each platform complements the others. Study the code here, understand the concepts in the blog post, and engage with the community on LinkedIn!
 
 ---
 

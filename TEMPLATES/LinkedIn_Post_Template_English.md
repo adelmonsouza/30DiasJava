@@ -19,15 +19,10 @@
 **Key takeaway:**
 [One powerful insight - sentence format]
 
-🔗 Full project: [GitHub link]  
-📖 Deep-dive article: [Blog article link on enouveau.io]
+🔗 Full project: [GitHub link - format: github.com/adelmonsouza/30DiasJava-DayXX-ProjectName]
+📖 Deep-dive article: [Blog article link - format: enouveau.io/blog/YYYY/MM/DD/article-slug.html]
 
 ---
-
-**Content Ecosystem:**
-- **GitHub** = Complete code + README + Business Plan
-- **Blog** = Technical deep-dive + "Under the Hood" analysis
-- **LinkedIn** = This post! Engagement and insights
 
 What BigTech concept would you like to see replicated?
 What's your biggest challenge in Java/Spring Boot?
@@ -103,15 +98,15 @@ When you call `repository.findAll()`, Hibernate loads every single record into m
 **Key takeaway:**
 Performance isn't something that just happens automatically – you really have to work for it, and architectural choices can either make that easier or much harder.
 
-🔗 Full project: github.com/adelmonsouza/30DiasJava-Day02-ContentCatalogAPI  
+🔗 Full project: github.com/adelmonsouza/30DiasJava-Day02-ContentCatalogAPI
 📖 Deep-dive article: enouveau.io/blog/2025/11/02/pagination-under-the-hood.html
-
----
 
 **Content Ecosystem:**
 - **GitHub** = Complete code + README + Business Plan
-- **Blog** = Technical deep-dive + "Under the Hood" analysis
+- **Blog** = Technical deep-dive + "Under the Hood" analysis  
 - **LinkedIn** = This post! Engagement and insights
+
+---
 
 What BigTech concept would you like to see replicated?
 What's your biggest challenge with performance in Spring Boot?
