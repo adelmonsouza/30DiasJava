@@ -40,7 +40,7 @@ Cada projeto é um **produto completo** com:
 
 - **Tecnologias:** Java 21, Spring Boot 3.2+, PostgreSQL, JWT, Docker
 - **Conceitos:** DTOs, Thin Controllers, Spring Security, JWT Authentication
-- **Repositório:** [github.com/adelmonsouza/user-profile-service](https://github.com/adelmonsouza/user-profile-service)
+- **Repositório:** [github.com/adelmonsouza/30DiasJava-Day01-UserProfileService](https://github.com/adelmonsouza/30DiasJava-Day01-UserProfileService)
 - **Link Local:** [user-profile-service/](./user-profile-service/)
 - **Artigo:** [DTOs Under the Hood](https://enouveau.io/blog/2025/11/01/dtos-under-the-hood.html)
 
