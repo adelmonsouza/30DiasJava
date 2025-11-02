@@ -1,1 +1,18 @@
+# Large planning/history files
 cursor_planejamento_do_projeto_bookstor.md
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Temporary files
+*.tmp
+*.log
