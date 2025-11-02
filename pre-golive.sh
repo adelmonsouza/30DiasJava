@@ -234,6 +234,237 @@ check_coverage() {
 }
 
 ################################################################################
+# Code Quality Checks
+################################################################################
+
+check_code_quality() {
+    local project_dir=$1
+    print_info "Running code quality checks..."
+    
+    cd "$project_dir"
+    local quality_issues=0
+    
+    # Checkstyle
+    if mvn checkstyle:check -q > /tmp/checkstyle.log 2>&1 2>/dev/null; then
+        print_success "Checkstyle: No issues found"
+    else
+        if grep -q "checkstyle" pom.xml 2>/dev/null; then
+            print_warning "Checkstyle found issues (check /tmp/checkstyle.log)"
+            quality_issues=1
+        else
+            print_info "Checkstyle not configured (optional)"
+        fi
+    fi
+    
+    # PMD
+    if mvn pmd:check -q > /tmp/pmd.log 2>&1 2>/dev/null; then
+        print_success "PMD: No issues found"
+    else
+        if grep -q "pmd" pom.xml 2>/dev/null; then
+            print_warning "PMD found issues (check /tmp/pmd.log)"
+            quality_issues=1
+        else
+            print_info "PMD not configured (optional)"
+        fi
+    fi
+    
+    # SpotBugs
+    if mvn spotbugs:check -q > /tmp/spotbugs.log 2>&1 2>/dev/null; then
+        print_success "SpotBugs: No issues found"
+    else
+        if grep -q "spotbugs" pom.xml 2>/dev/null; then
+            print_warning "SpotBugs found issues (check /tmp/spotbugs.log)"
+            quality_issues=1
+        else
+            print_info "SpotBugs not configured (optional)"
+        fi
+    fi
+    
+    cd - > /dev/null
+    
+    if [ $quality_issues -eq 0 ]; then
+        return 0
+    else
+        print_warning "Code quality issues found (review logs)"
+        return 0  # Non-critical, but recommended
+    fi
+}
+
+################################################################################
+# Dependency Security Checks
+################################################################################
+
+check_dependency_security() {
+    local project_dir=$1
+    print_info "Checking for dependency vulnerabilities..."
+    
+    cd "$project_dir"
+    
+    # OWASP Dependency Check
+    if mvn org.owasp:dependency-check-maven:check -q > /tmp/dependency-check.log 2>&1 2>/dev/null; then
+        print_success "OWASP Dependency Check: No vulnerabilities found"
+        cd - > /dev/null
+        rm -f /tmp/dependency-check.log
+        return 0
+    else
+        # Check if plugin is configured
+        if grep -q "dependency-check-maven" pom.xml 2>/dev/null; then
+            print_warning "OWASP Dependency Check found vulnerabilities (check /tmp/dependency-check.log)"
+            if [ -f "target/dependency-check-report.html" ]; then
+                print_info "Report: $project_dir/target/dependency-check-report.html"
+            fi
+        else
+            print_info "OWASP Dependency Check not configured (recommended to add)"
+        fi
+        cd - > /dev/null
+        return 0  # Non-critical
+    fi
+}
+
+################################################################################
+# Database & Migrations Checks
+################################################################################
+
+check_database_migrations() {
+    local project_dir=$1
+    print_info "Checking database migrations..."
+    
+    local migration_checks_passed=0
+    
+    # Check for Flyway
+    if grep -q "flyway" pom.xml 2>/dev/null || [ -d "$project_dir/src/main/resources/db/migration" ]; then
+        print_success "Flyway configuration found"
+        
+        # Validate migrations
+        cd "$project_dir"
+        if mvn flyway:validate -q > /tmp/flyway.log 2>&1 2>/dev/null; then
+            print_success "Flyway migrations valid"
+        else
+            if grep -q "flyway" pom.xml 2>/dev/null; then
+                print_warning "Flyway validation failed (check /tmp/flyway.log)"
+            fi
+        fi
+        cd - > /dev/null
+        migration_checks_passed=1
+    fi
+    
+    # Check for Liquibase
+    if grep -q "liquibase" pom.xml 2>/dev/null || [ -f "$project_dir/src/main/resources/db/changelog/db.changelog-master.xml" ]; then
+        print_success "Liquibase configuration found"
+        
+        # Validate changelogs
+        cd "$project_dir"
+        if mvn liquibase:validate -q > /tmp/liquibase.log 2>&1 2>/dev/null; then
+            print_success "Liquibase changelogs valid"
+        else
+            if grep -q "liquibase" pom.xml 2>/dev/null; then
+                print_warning "Liquibase validation failed (check /tmp/liquibase.log)"
+            fi
+        fi
+        cd - > /dev/null
+        migration_checks_passed=1
+    fi
+    
+    if [ $migration_checks_passed -eq 0 ]; then
+        print_info "No database migration tool configured (Flyway or Liquibase recommended)"
+    fi
+    
+    return 0  # Non-critical
+}
+
+################################################################################
+# Configuration & Properties Checks
+################################################################################
+
+check_configuration() {
+    local project_dir=$1
+    print_info "Checking configuration files..."
+    
+    local config_issues=0
+    
+    # Check for application.properties or application.yml
+    local config_file=""
+    if [ -f "$project_dir/src/main/resources/application.properties" ]; then
+        config_file="$project_dir/src/main/resources/application.properties"
+        print_success "application.properties found"
+    elif [ -f "$project_dir/src/main/resources/application.yml" ]; then
+        config_file="$project_dir/src/main/resources/application.yml"
+        print_success "application.yml found"
+    else
+        print_warning "No application.properties or application.yml found"
+        config_issues=1
+    fi
+    
+    # Check for required properties (if config file exists)
+    if [ -n "$config_file" ]; then
+        # Check for database configuration
+        if ! grep -qE "(spring\.datasource|datasource)" "$config_file" 2>/dev/null; then
+            print_warning "Database configuration not found in $config_file"
+        fi
+        
+        # Check for JPA configuration
+        if ! grep -qE "spring\.jpa|spring\.data\.jpa" "$config_file" 2>/dev/null; then
+            print_warning "JPA configuration not found in $config_file"
+        fi
+        
+        # Check for server port
+        if ! grep -qE "server\.port" "$config_file" 2>/dev/null; then
+            print_info "server.port not configured (will use default 8080)"
+        fi
+    fi
+    
+    # Check for required environment variables (already checked in original script)
+    print_info "Required env vars: DB_URL, DB_USER, DB_PASS (if applicable)"
+    
+    if [ $config_issues -eq 0 ]; then
+        return 0
+    else
+        return 0  # Non-critical warnings
+    fi
+}
+
+################################################################################
+# Performance & Profiling Checks
+################################################################################
+
+check_performance() {
+    local project_dir=$1
+    print_info "Checking performance configuration..."
+    
+    local perf_checks_passed=0
+    
+    # Check for actuator endpoints
+    if grep -q "spring-boot-starter-actuator" "$project_dir/pom.xml" 2>/dev/null; then
+        print_success "Spring Actuator found (enables monitoring)"
+        perf_checks_passed=1
+    fi
+    
+    # Check for logging configuration
+    if [ -f "$project_dir/src/main/resources/logback.xml" ] || \
+       [ -f "$project_dir/src/main/resources/log4j2.xml" ] || \
+       grep -q "logging" "$project_dir/src/main/resources/application.properties" 2>/dev/null || \
+       grep -q "logging" "$project_dir/src/main/resources/application.yml" 2>/dev/null; then
+        print_success "Logging configuration found"
+        perf_checks_passed=1
+    else
+        print_info "Logging configuration not found (optional but recommended)"
+    fi
+    
+    # Check for connection pool configuration
+    local config_file=""
+    [ -f "$project_dir/src/main/resources/application.properties" ] && config_file="$project_dir/src/main/resources/application.properties"
+    [ -f "$project_dir/src/main/resources/application.yml" ] && config_file="$project_dir/src/main/resources/application.yml"
+    
+    if [ -n "$config_file" ] && grep -qE "(hikari|tomcat|druid)" "$config_file" 2>/dev/null; then
+        print_success "Connection pool configuration found"
+    else
+        print_info "Connection pool not explicitly configured (will use defaults)"
+    fi
+    
+    return 0  # Optional checks
+}
+
+################################################################################
 # Docker Checks
 ################################################################################
 
@@ -339,11 +570,26 @@ validate_project() {
     # 5. Coverage check (recommended)
     check_coverage "$project_dir"
     
-    # 6. Docker check (recommended)
+    # 6. Code quality check (recommended)
+    check_code_quality "$project_dir"
+    
+    # 7. Dependency security check (recommended)
+    check_dependency_security "$project_dir"
+    
+    # 8. Database migrations check (recommended)
+    check_database_migrations "$project_dir"
+    
+    # 9. Configuration check (recommended)
+    check_configuration "$project_dir"
+    
+    # 10. Docker check (recommended)
     check_docker "$project_dir"
     
-    # 7. CI/CD check (recommended)
+    # 11. CI/CD check (recommended)
     check_cicd "$project_dir"
+    
+    # 12. Performance check (optional)
+    check_performance "$project_dir"
     
     # Summary
     echo ""
