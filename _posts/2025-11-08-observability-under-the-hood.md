@@ -6,24 +6,24 @@ categories: Operations Spring Boot
 permalink: /blog/2025/11/08/observability-under-the-hood.html
 ---
 
-Hey there! Day 08 of #30DiasJava was all about answering one uncomfortable question: **How do we notice failures before our users do?** After playing with circuit breakers (Day 06) and async pipelines (Day 07), I wanted to dive into the detection layer — namely Prometheus, Alertmanager, and the instrumentation that feeds them.
+Hey there! Day 08 of #30DiasJava was about answering one uncomfortable question: **How do we spot failures before customers tweet about them?** After exploring circuit breakers (Day 06) and async workflows (Day 07), I turned to the detection layer — Prometheus, Alertmanager, and the instrumentation that feeds them.
 
-**Disclaimer**: This is not an exhaustive observability guide. It’s a focused look at how metrics travel from a Spring Boot application to a pager alert, and the architectural choices we make along the way.
+**Disclaimer**: This is not a full observability guide. It’s a focused look at how Spring Boot metrics become actionable alerts, with everything based on the official Spring documentation and Prometheus best practices.
 
 ## Why I'm Looking at This
 
-**Full disclosure**: I once shipped a feature that silently failed for three days. The service kept returning HTTP 200, but the response body was wrong. Monitoring only tracked JVM heap and CPU, so we missed it. Today I wanted to model a proper alert pipeline that catches both infrastructure and domain failures.
+**Full disclosure**: I once deployed a feature that returned HTTP 200 with the wrong payload for three days. CPU, memory, and uptime were green. We only noticed when users complained. So today I wanted to build alerting around **domain health**, not just infrastructure.
 
-## The Observability Stack I Assembled
+## The Observability Stack
 
-1. **Spring Boot Actuator** exporting Micrometer metrics.
-2. **Prometheus** scraping `/actuator/prometheus`.
-3. **Alertmanager** evaluating rules and routing alerts.
-4. **Grafana** dashboards for human-friendly visualization.
+1. Spring Boot Actuator exporting Micrometer metrics (`/actuator/prometheus`).
+2. Prometheus scraping metrics on a 15-second cadence.
+3. Alertmanager evaluating rules and triggering PagerDuty.
+4. Grafana dashboards stitching everything together.
 
 ## Under the Hood: Instrumenting the Service
 
-### 1. Basic HTTP Metrics
+### 1. Spring Boot Configuration
 
 ```yaml
 management:
@@ -36,13 +36,14 @@ management:
       application: order-service
 ```
 
-This exposes default metrics like `http_server_requests_seconds`. Prometheus scrapes it, giving us latency histograms and status code counts.
+This exposes HTTP metrics (`http_server_requests_seconds`) with an `application` tag for multi-service environments.
 
-### 2. Custom Business Metrics
+### 2. Custom Domain Metrics
 
 ```java
 @Component
 public class CheckoutMetrics {
+
     private final Counter failedOrders;
 
     public CheckoutMetrics(MeterRegistry registry) {
@@ -58,41 +59,36 @@ public class CheckoutMetrics {
 }
 ```
 
-This counter increments every time payment authorization fails. It’s our canary for domain health.
+Now we can alert when payment failures spike, even if HTTP status codes stay 200.
 
-### 3. Prometheus Scrape Configuration
+### 3. Prometheus Scrape Job
 
 ```yaml
 scrape_configs:
   - job_name: 'order-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['orders-service.internal:8080']
+      - targets: ['order-service.internal:8080']
 ```
 
-Prometheus pulls metrics every 15 seconds, storing them with 1-second resolution for recent data and longer retention for trend analysis.
+Prometheus persists metrics with timestamped samples, enabling both real-time alerts and historical investigations.
 
-## Alerting Rules That Matter
+## Alert Rules That Matter
 
-### SLO-Oriented Latency Alert
+### SLO-Based Latency Alert
 
 ```yaml
-groups:
-  - name: order-service.rules
-    rules:
-      - alert: HighCheckoutLatency
-        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{uri=\"/api/orders\"}[5m])) by (le)) > 0.5
-        for: 10m
-        labels:
-          severity: page
-        annotations:
-          summary: "Checkout latency is above 500ms (p95)"
-          description: "Investigate upstream payments and database load."
+- alert: HighCheckoutLatency
+  expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{uri="/api/orders"}[5m])) by (le)) > 0.5
+  for: 10m
+  labels:
+    severity: page
+  annotations:
+    summary: "Checkout p95 latency above 500ms"
+    description: "Investigate upstream payment latency or database contention."
 ```
 
-This alerts when the 95th percentile latency for `/api/orders` stays above 500 ms for 10 minutes. Tuning `for` avoids noisy flapping on short spikes.
-
-### Domain Failure Alert
+### Business-Failure Alert
 
 ```yaml
 - alert: CheckoutFailuresSpiking
@@ -102,14 +98,10 @@ This alerts when the 95th percentile latency for `/api/orders` stays above 500 m
     severity: page
   annotations:
     summary: "Checkout failures exceeded 20 in 5 minutes"
-    description: "Potential payment provider outage or regression."
+    description: "Potential payment outage or regression."
 ```
 
-This catches spikes even if HTTP responses are still 200. Business KPIs become first-class citizens in our monitoring.
-
-## Alert Routing and Noise Reduction
-
-Alertmanager configuration:
+### Alert Routing Discipline
 
 ```yaml
 route:
@@ -125,41 +117,41 @@ receivers:
       - routing_key: ${PAGERDUTY_KEY}
 ```
 
-- `group_wait`: batches related alerts triggered within 30 seconds.
-- `repeat_interval`: avoids spamming on-call every minute.
-- `group_by`: ensures all order-service alerts arrive in one page.
+Grouping and repeat intervals prevent alert storms while keeping on-call informed.
 
-## Visualizing the Signals
+## Dashboards as Incident Maps
 
-In Grafana, I built a dashboard with panels for:
+In Grafana, I built panels for:
 
-- `p95 latency` (PromQL: `histogram_quantile(0.95, sum(rate(...)) by (le))`)
-- `checkout_failed_total` counter
-- `kafka_consumer_lag` from Day 07’s async flow
-- `resilience4j_circuitbreaker_state` from Day 06’s resilience work
+- `p95 latency` per endpoint.
+- `checkout_failed_total` (domain health).
+- `kafka_consumer_lag` (from Day 07 experiments).
+- `resilience4j_circuitbreaker_state` (Day 06).
 
-This unified view showed how resilience patterns, async pipelines, and alerting reinforce each other.
+This cross-links resilience, async processing, and alerting into a single incident map.
 
 ## What Can We Learn From This?
 
-1. **Unit economics of alerts matter** — only alert when humans must act.
-2. **Domain metrics catch silent failures** way before infrastructure metrics do.
-3. **Dashboards contextualize alerts** so on-call can respond faster.
+1. **Metrics without alerting are passive.** Alerts codify what matters for the business.
+2. **Domain metrics detect silent failures** before infrastructure metrics react.
+3. **Dashboards tell the story** — they stitch resilience, async workloads, and alerts together.
 
 ## Final Thoughts
 
-Observability is not a one-time setup. It’s a systems design discipline. Today’s experiment convinced me that:
+Observability is an architectural decision. It’s part of the product, not just operations. Today drove home that resilience patterns (Day 06) and async pipelines (Day 07) only work if we can **see** when they fail.
 
-1. Instrumentation should be part of feature acceptance criteria.
-2. Alerting rules must encode business SLOs, not just server vitals.
-3. Dashboards are storytelling tools for incidents — make them coherent.
-4. Pairing resilience (Day 06) and async (Day 07) with observability (Day 08) closes the loop.
+**Key takeaways:**
+
+1. Expose Micrometer metrics via Actuator and enrich them with domain tags.
+2. Alert on SLOs and domain signals, not just CPU and memory.
+3. Route alerts responsibly — reduce noise, increase clarity.
+4. Document dashboards and runbooks as part of the release.
 
 ---
 
 **Full project:** [Observability Stack (Day 08)](https://github.com/adelmonsouza/30DiasJava-Day08-Observability)
 
-**Next article:** Coming soon — exploring feature flags and progressive delivery (Day 09)
+**Next article:** Coming soon — Feature Flags and Progressive Delivery in Spring Boot (Day 09)
 
 ---
 
