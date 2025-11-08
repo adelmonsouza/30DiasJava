@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: day05-testcontainers-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-testcontainers}
+      POSTGRES_USER: ${DB_USERNAME:-testcontainers}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-testcontainers}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-testcontainers} -d ${DB_NAME:-testcontainers}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+

@@ -11,21 +11,21 @@ This repository is part of the **#30DiasJava** challenge: 30 production-grade Ja
 - **Day:** 05
 - **Project:** Testcontainers Playbook
 - **Blog article:** [Integration Tests Without Flaky Environments: How Testcontainers Keeps Spring Boot Reproducible](https://enouveau.io/blog/2025/11/05/testcontainers-under-the-hood.html)
-- **Tech Focus:** Spring Boot, Testcontainers, PostgreSQL, Kafka
+- **Tech Focus:** Spring Boot, Testcontainers, PostgreSQL
 
 ---
 
 ## 🧠 Problem Statement
 
-Integration tests that rely on in-memory databases or mocks often miss issues that surface in staging: incompatible SQL, missing migrations, serializers that fail against real brokers. This project demonstrates how to run Spring Boot integration tests against disposable PostgreSQL and Kafka instances using Testcontainers, keeping the feedback loop fast while matching production infrastructure.
+Legacy integration tests often rely on shared QA databases that drift from production, making regressions hard to reproduce and eroding trust in the deployment pipeline. We need a repeatable way to provision disposable infrastructure so every developer, PR, and CI job can verify behaviour against a real PostgreSQL instance—without maintaining brittle scripts or manual set-up steps.
 
 ---
 
 ## 🏗️ Architecture Highlights
 
-- Runs PostgreSQL 16 and Kafka 7.x in disposable containers for every test suite.
-- Uses `@DynamicPropertySource` to inject runtime connection details into Spring Boot without hardcoding URLs.
-- Provides a sample domain (`OrderService`) plus integration tests that verify persistence and messaging end-to-end.
+- Spring Boot API that persists `Order` aggregates in PostgreSQL using JPA, keeping production parity with the service we test.
+- Testcontainers-powered integration tests spin up PostgreSQL 16 on-demand and wire its connection details via `@DynamicPropertySource`, eliminating environment drift.
+- Docker Compose mirrors the same topology for local runs, so developers and CI observe the exact same infrastructure contract.
 
 > Detailed explanations and architectural decisions are documented in the companion blog post.
 
@@ -34,22 +34,23 @@ Integration tests that rely on in-memory databases or mocks often miss issues th
 ## 🧪 Running Locally
 
 ```bash
-# 1. Pre-requisites: Docker running + Java 21 + Maven 3.9+
-
-# 2. Clone the repo
+# 1. Clone the repo
 git clone https://github.com/adelmonsouza/30DiasJava-Day05-Testcontainers.git
 cd 30DiasJava-Day05-Testcontainers
 
-# 3. Run the full integration test suite (starts Testcontainers)
-mvn clean verify
+# 2. Start PostgreSQL (optional if you already have a local instance)
+docker compose up -d
 
-# 4. Optional: Run the application
-docker compose up -d postgres
-SPRING_PROFILES_ACTIVE=local mvn spring-boot:run
+# 3. Run the Spring Boot API
+./mvnw spring-boot:run
+
+# 4. Run the Testcontainers-powered integration tests
+./mvnw test
 ```
 
-- The `local` profile starts the app against the Docker Compose PostgreSQL instance (see `docker-compose.yml`).
-- Integration tests spin up their own containers automatically; no manual services are required.
+> Tip: CI can rely on `./mvnw test` without provisioning Docker in advance because Testcontainers manages the lifecycle of PostgreSQL automatically.
+>
+> You need a container runtime (Docker Desktop, Colima, Rancher Desktop, or Podman with Docker compatibility) running locally for the integration tests to pass.
 
 ---
 
@@ -57,9 +58,9 @@ SPRING_PROFILES_ACTIVE=local mvn spring-boot:run
 
 | Check | Status | Command |
 |-------|--------|---------|
-| Tests | ☐ Pending | `mvn clean verify` |
-| Lint / Static Analysis | ☐ Pending | `mvn -Pcode-quality verify` |
-| Security Scan | ☐ Pending | `./pre-golive.sh 30DiasJava-Day05-Testcontainers` |
+| Tests | ☐ Pending | `./mvnw test` |
+| Lint / Static Analysis | ☐ Pending | `./mvnw verify` |
+| Security Scan | ☐ Pending | `../pre-golive.sh 30DiasJava-Day05-Testcontainers` |
 
 > Before publishing the article, ensure all quality checks are green.
 
@@ -68,9 +69,10 @@ SPRING_PROFILES_ACTIVE=local mvn spring-boot:run
 ## 📚 References
 
 - Blog article: [Integration Tests Without Flaky Environments: How Testcontainers Keeps Spring Boot Reproducible](https://enouveau.io/blog/2025/11/05/testcontainers-under-the-hood.html)
-- Testcontainers Docs: https://testcontainers.com/guides/getting-started-with-testcontainers-for-java/
-- Spring Boot Testing: https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#testing
-- PostgreSQL JDBC Driver: https://jdbc.postgresql.org/documentation/
+- Tech docs:
+  - [Testcontainers for Java](https://testcontainers.com/guides/getting-started-with-testcontainers-for-java/)
+  - [Spring Boot + Testcontainers documentation](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#features.testing.testcontainers)
+  - [PostgreSQL JDBC Driver](https://jdbc.postgresql.org/)
 - Challenge hub: [30DiasJava](https://github.com/adelmonsouza/30DiasJava)
 
 ---

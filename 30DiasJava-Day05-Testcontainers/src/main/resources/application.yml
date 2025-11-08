@@ -1,1 +1,25 @@
+spring:
+  application:
+    name: testcontainers-playbook
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:testcontainers}
+    username: ${DB_USERNAME:testcontainers}
+    password: ${DB_PASSWORD:testcontainers}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
 

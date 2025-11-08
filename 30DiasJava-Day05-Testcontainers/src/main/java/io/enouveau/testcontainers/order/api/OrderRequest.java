@@ -1,11 +1,15 @@
 package io.enouveau.testcontainers.order.api;
 
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+import java.math.BigDecimal;
 
 public record OrderRequest(
-        @NotBlank String sku,
-        @Min(1) Integer quantity
+        @Email @NotBlank String customerEmail,
+        @NotNull @Positive BigDecimal amount
 ) {
 }
 

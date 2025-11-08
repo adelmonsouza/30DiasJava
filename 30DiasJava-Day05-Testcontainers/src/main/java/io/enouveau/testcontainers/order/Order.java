@@ -2,61 +2,71 @@ package io.enouveau.testcontainers.order;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "orders")
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false, length = 64)
-    private String sku;
+    @GeneratedValue
+    private UUID id;
 
     @Column(nullable = false)
-    private Integer quantity;
-
-    @Column(nullable = false, length = 32)
-    private String status;
+    private String customerEmail;
 
     @Column(nullable = false)
-    private OffsetDateTime createdAt;
+    private BigDecimal amount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status = OrderStatus.CREATED;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
 
     protected Order() {
-        // JPA only
+        // JPA
     }
 
-    public Order(String sku, Integer quantity, OrderStatus status, OffsetDateTime createdAt) {
-        this.sku = sku;
-        this.quantity = quantity;
-        this.status = status.name();
-        this.createdAt = createdAt;
+    public Order(String customerEmail, BigDecimal amount) {
+        this.customerEmail = customerEmail;
+        this.amount = amount;
+        this.status = OrderStatus.CREATED;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getSku() {
-        return sku;
+    public String getCustomerEmail() {
+        return customerEmail;
     }
 
-    public Integer getQuantity() {
-        return quantity;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
     public OrderStatus getStatus() {
-        return OrderStatus.valueOf(status);
+        return status;
     }
 
-    public OffsetDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public void markPaid() {
+        this.status = OrderStatus.PAID;
     }
 }
 
