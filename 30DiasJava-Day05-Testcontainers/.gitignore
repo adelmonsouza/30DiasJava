@@ -1,0 +1,13 @@
+# Build artifacts
+/target/
+/out/
+
+# IDE files
+.idea/
+.project
+.classpath
+.settings/
+.vscode/
+
+# OS files
+.DS_Store

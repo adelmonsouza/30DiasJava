@@ -119,3 +119,4 @@ Qual funcionalidade de BigTech (Netflix, Spotify, Google) vocês gostariam de ve
 
 **Crie consistência e valor. O segredo não é ser o melhor, é ser consistente! 🚀**
 
+

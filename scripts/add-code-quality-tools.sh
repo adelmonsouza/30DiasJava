@@ -96,3 +96,4 @@ done
 echo ""
 echo "✅ Done! Run 'mvn clean verify' to test the new plugins."
 
+

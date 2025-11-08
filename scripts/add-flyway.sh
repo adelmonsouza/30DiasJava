@@ -95,3 +95,4 @@ echo ""
 echo "✅ Done! Configure database connection in application.properties"
 echo "   Then run 'mvn flyway:migrate' to apply migrations"
 
+
