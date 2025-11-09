@@ -69,6 +69,7 @@
 - ✅ `SECURITY.md` com checklist de proteção (Dependabot, branch protection, headers, etc.) + seção de status das ações
 - ✅ README com badges de build (`pre-golive`), uptime e deploy do GitHub Pages
 - ✅ `_data/progress.yml` + `_data/java_news.yml` alimentando barra de progresso e feed de notícias
+- ✅ Nova landing do blog (`blog.md`) com hero editorial, navegação e tabela de posts
 
 ---
 
