@@ -49,6 +49,7 @@
 - ✅ 100% traduzido para inglês
 - ✅ Meta tags HTML: `lang="en"`
 - ✅ Novos artigos publicados (Dias 06, 07 e 08) com referências de segurança e links oficiais
+- ✅ Artigos Day 09 (Payment) e Day 10 (Reporting) publicados com integração segura e relatórios executivos
 
 ### 5. Novos Repositórios Criados (Dia 06-08)
 - ✅ `30DiasJava-Day06-Resilience4j`
