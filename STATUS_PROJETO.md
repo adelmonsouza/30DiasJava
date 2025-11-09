@@ -42,7 +42,9 @@
 ### 4. Blog "The Java Place"
 - ✅ Homepage melhorada seguindo padrão SwiftyPlace
 - ✅ Hero section com gradiente moderno
-- ✅ Artigos em cards com hover effects
+- ✅ Barra de progresso do #30DiasJava + CTA duplo (dados puxados do `_config.yml`)
+- ✅ Quick Actions sidebar com links úteis
+- ✅ Recursos em cards (preview) e CTA para hub dedicado (agora inclui Testcontainers, LinkedIn Templates, Microservices)
 - ✅ Layout responsivo
 - ✅ 100% traduzido para inglês
 - ✅ Meta tags HTML: `lang="en"`
@@ -61,6 +63,11 @@
   - Spring Boot + Prometheus + Alertmanager + Grafana
   - Docs: `docs/DASHBOARD_NOTES.md`
   - Cross-link: [Post no blog](https://enouveau.io/blog/2025/11/08/observability-under-the-hood.html)
+
+### 6. Documentação e Segurança
+- ✅ Página `resources.md` com hub de cheatsheets e playbooks
+- ✅ `SECURITY.md` com checklist de proteção (Dependabot, branch protection, headers, etc.) + seção de status das ações
+- ✅ README com badges de build (`pre-golive`), uptime e deploy do GitHub Pages
 
 ---
 
