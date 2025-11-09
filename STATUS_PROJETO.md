@@ -70,6 +70,7 @@
 - ✅ README com badges de build (`pre-golive`), uptime e deploy do GitHub Pages
 - ✅ `_data/progress.yml` + `_data/java_news.yml` alimentando barra de progresso e feed de notícias
 - ✅ Nova landing do blog (`blog.md`) com hero editorial, navegação e tabela de posts
+- ✅ Repositório público reduzido a `_posts/` + `pre-golive.sh` (demais projetos/planejamentos movidos para backup privado)
 
 ---
 
@@ -77,7 +78,6 @@
 
 ### Scripts
 - `/Volumes/AdellServer/Projects/30days/30DiasJava/pre-golive.sh` - Script principal
-- `/Volumes/AdellServer/Projects/30days/30DiasJava/scripts/add-code-quality-tools.sh`
 - `/Volumes/AdellServer/Projects/30days/30DiasJava/scripts/add-flyway.sh`
 - `/Volumes/AdellServer/Projects/30days/30DiasJava/scripts/add-content-ecosystem-links.sh`
 
