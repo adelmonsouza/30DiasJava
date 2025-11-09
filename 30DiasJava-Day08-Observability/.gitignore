@@ -1,6 +1,0 @@
-orders-service/target/
-monitoring/grafana
-.DS_Store
-.idea/
-*.iml
-orders-service/.mvn/wrapper/maven-wrapper.jar

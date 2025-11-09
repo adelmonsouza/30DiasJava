@@ -1,5 +1,0 @@
-feature:
-  checkout:
-    express: true
-checkout:
-  currency: EUR
