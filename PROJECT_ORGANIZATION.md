@@ -136,8 +136,8 @@
 - ✅ Business Plan Template (English)
 
 ### Documentation
-- ✅ README_EN.md (English version)
 - ✅ Project organization guidelines
+- ℹ️ README_EN.md (English version) now maintained outside the public repo
 
 ---
 
