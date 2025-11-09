@@ -1,0 +1,6 @@
+config-server/target/
+order-service/target/
+.idea/
+*.iml
+.mvn/wrapper/maven-wrapper.jar
+.DS_Store

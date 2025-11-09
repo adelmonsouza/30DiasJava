@@ -58,6 +58,7 @@ Cada projeto é um **produto completo** com:
 ---
 
 ### ✅ Dia 4-5: Recommendation-Engine
+### ✅ Dia 4-5: Recommendation-Engine
 **Conceito:** Sistema de Recomendações (Inspirado em Amazon/Netflix)
 
 - **Tecnologias:** Java 21, Spring Boot 3.2+, PostgreSQL, Algoritmos
@@ -68,6 +69,39 @@ Cada projeto é um **produto completo** com:
 
 ---
 
+### ✅ Dia 6: Resilience4j Playground
+**Conceito:** Proteção contra falhas em cadeia (Inspirado em arquitetura resiliente de e-commerce)
+
+- **Tecnologias:** Java 21, Spring Boot 3.2+, WebFlux, Resilience4j
+- **Conceitos:** Circuit Breaker, Bulkhead, TimeLimiter, fallback seguro
+- **Repositório:** [github.com/adelmonsouza/30DiasJava-Day06-Resilience4j](https://github.com/adelmonsouza/30DiasJava-Day06-Resilience4j)
+- **Link Local:** [30DiasJava-Day06-Resilience4j/](./30DiasJava-Day06-Resilience4j/)
+- **Artigo:** [Circuit Breakers in Spring Boot](https://enouveau.io/blog/2025/11/06/resilience4j-under-the-hood.html)
+
+---
+
+### ✅ Dia 7: Config Service
+**Conceito:** Centralização de configurações (Inspirado em plataformas multi-tenant)
+
+- **Tecnologias:** Spring Cloud Config, Spring Boot 3.2+, Docker Secrets
+- **Conceitos:** Externalized Configuration, @RefreshScope, Git-backed properties, security hardening
+- **Repositório:** [github.com/adelmonsouza/30DiasJava-Day07-ConfigService](https://github.com/adelmonsouza/30DiasJava-Day07-ConfigService)
+- **Link Local:** [30DiasJava-Day07-ConfigService/](./30DiasJava-Day07-ConfigService/)
+- **Artigo:** [Centralized Configuration in Spring Boot](https://enouveau.io/blog/2025/11/07/config-server-under-the-hood.html)
+
+---
+
+### ✅ Dia 8: Observability Stack
+**Conceito:** Observabilidade orientada a alertas (Inspirado em SRE de plataformas SaaS)
+
+- **Tecnologias:** Spring Boot 3.2+, Prometheus, Alertmanager, Grafana
+- **Conceitos:** SLO-based alerting, Micrometer custom metrics, dashboards focados em negócio
+- **Repositório:** [github.com/adelmonsouza/30DiasJava-Day08-Observability](https://github.com/adelmonsouza/30DiasJava-Day08-Observability)
+- **Link Local:** [30DiasJava-Day08-Observability/](./30DiasJava-Day08-Observability/)
+- **Artigo:** [Observability-Driven Alerting](https://enouveau.io/blog/2025/11/08/observability-under-the-hood.html)
+
+---
+
 ## 🗓️ Status dos Projetos
 
 | Dia | Projeto | Conceito BigTech | Status | Repositório |
@@ -75,7 +109,10 @@ Cada projeto é um **produto completo** com:
 | 1 | User-Profile-Service | Facebook/X | ✅ Completo | [30DiasJava-Day01](https://github.com/adelmonsouza/30DiasJava-Day01-UserProfileService) |
 | 2-3 | Content-Catalog-API | Netflix/Spotify | ✅ Completo | [30DiasJava-Day02](https://github.com/adelmonsouza/30DiasJava-Day02-ContentCatalog) |
 | 4-5 | Recommendation-Engine | Amazon/Netflix | ✅ Completo 🔒 | [30DiasJava-Day03](https://github.com/adelmonsouza/30DiasJava-Day03-RecommendationEngine) |
-| 6-30 | Em planejamento | - | 🚧 Aguardando | - |
+| 6 | Resilience4j Playground | E-commerce resiliente | ✅ Completo | [Day06](https://github.com/adelmonsouza/30DiasJava-Day06-Resilience4j) |
+| 7 | Config Service | Multi-tenant platform | ✅ Completo | [Day07](https://github.com/adelmonsouza/30DiasJava-Day07-ConfigService) |
+| 8 | Observability Stack | SRE / SaaS | ✅ Completo | [Day08](https://github.com/adelmonsouza/30DiasJava-Day08-Observability) |
+| 9-30 | Em planejamento | - | 🚧 Aguardando | - |
 
 **Veja o plano completo em:** [PROJETOS_30DIAS.md](./PROJETOS_30DIAS.md)
 
@@ -129,6 +166,21 @@ Cada projeto é um **produto completo** com:
 │   ├── README.md              # Documentação do projeto
 │   ├── Dockerfile             # Containerização
 │   └── compose.yaml           # Docker Compose
+│
+├── 30DiasJava-Day06-Resilience4j/  # Projeto Dia 6 ✅
+│   ├── src/                       # Código fonte (WebFlux + Resilience4j)
+│   ├── docs/PLAYBOOK.md           # Guia de caos e métricas
+│   └── pom.xml                    # Maven
+│
+├── 30DiasJava-Day07-ConfigService/ # Projeto Dia 7 ✅
+│   ├── config-server/             # Config Server
+│   ├── order-service/             # Cliente de exemplo
+│   └── docs/SECURITY_CHECKLIST.md # Hardening
+│
+├── 30DiasJava-Day08-Observability/ # Projeto Dia 8 ✅
+│   ├── orders-service/            # API instrumentada
+│   ├── monitoring/                # Prometheus + Alertmanager + Grafana
+│   └── docs/DASHBOARD_NOTES.md    # Consultas e dashboards
 │
 ├── THE_JAVA_PLACE/            # Blog (Jekyll)
 │   ├── _posts/                # Artigos técnicos

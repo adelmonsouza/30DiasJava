@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: day06-resilience4j
+server:
+  port: 8080
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      pricing:
+        slidingWindowSize: 10
+        failureRateThreshold: 60
+        slowCallDurationThreshold: 800ms
+        slowCallRateThreshold: 50
+        waitDurationInOpenState: 5s
+  timelimiter:
+    instances:
+      pricing:
+        timeout-duration: 1s
+  thread-pool-bulkhead:
+    instances:
+      pricing:
+        coreThreadPoolSize: 5
+        maxThreadPoolSize: 10
+        queueCapacity: 5

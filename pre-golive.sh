@@ -947,8 +947,9 @@ fi
         done < <(find . -maxdepth 2 \( -name "pom.xml" -o -name "build.gradle" -o -name "build.gradle.kts" \) -type f -print0)
         
         # Remove duplicates
-        readarray -t unique_projects < <(printf '%s\n' "${projects[@]}" | sort -u)
-        projects=("${unique_projects[@]}")
+        local old_ifs="$IFS"
+        IFS=$'\n' projects=($(printf '%s\n' "${projects[@]}" | sort -u))
+        IFS="$old_ifs"
     fi
     
     echo "${projects[@]}"

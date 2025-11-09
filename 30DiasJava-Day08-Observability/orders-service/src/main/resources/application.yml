@@ -1,0 +1,13 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: observability-orders
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: observability-orders

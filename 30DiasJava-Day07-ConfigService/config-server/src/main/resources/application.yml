@@ -1,0 +1,21 @@
+server:
+  port: 8888
+spring:
+  application:
+    name: config-server
+  security:
+    user:
+      name: config
+      password: config123 # replace in production
+  cloud:
+    config:
+      server:
+        git:
+          uri: file://${CONFIG_REPO_PATH:../config-repo}
+          search-paths: order-service
+          clone-on-start: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,6 +1,6 @@
 # 📊 Status do Projeto #30DiasJava
 
-**Última atualização:** 02/11/2025
+**Última atualização:** 09/11/2025
 
 ---
 
@@ -46,6 +46,21 @@
 - ✅ Layout responsivo
 - ✅ 100% traduzido para inglês
 - ✅ Meta tags HTML: `lang="en"`
+- ✅ Novos artigos publicados (Dias 06, 07 e 08) com referências de segurança e links oficiais
+
+### 5. Novos Repositórios Criados (Dia 06-08)
+- ✅ `30DiasJava-Day06-Resilience4j`
+  - Circuit breaker + bulkhead com Resilience4j e WebFlux
+  - Docs: `docs/PLAYBOOK.md`
+  - Cross-link: [Post no blog](https://enouveau.io/blog/2025/11/06/resilience4j-under-the-hood.html)
+- ✅ `30DiasJava-Day07-ConfigService`
+  - Config Server + client + repositório Git de configurações
+  - Docs: `docs/SECURITY_CHECKLIST.md`
+  - Cross-link: [Post no blog](https://enouveau.io/blog/2025/11/07/config-server-under-the-hood.html)
+- ✅ `30DiasJava-Day08-Observability`
+  - Spring Boot + Prometheus + Alertmanager + Grafana
+  - Docs: `docs/DASHBOARD_NOTES.md`
+  - Cross-link: [Post no blog](https://enouveau.io/blog/2025/11/08/observability-under-the-hood.html)
 
 ---
 
